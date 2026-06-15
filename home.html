@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Power the Village ⚡</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:#050d1a;overflow-x:hidden;}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+
+/* Stars */
+#star-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+
+/* Wrapper */
+#app{position:relative;z-index:1;width:100%;max-width:520px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
+
+/* Screens */
+.screen{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;animation:fadeIn .3s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Typography */
+.title{font-size:28px;font-weight:700;color:#fff;text-align:center;letter-spacing:-0.5px;}
+.subtitle{font-size:14px;color:#64748b;text-align:center;line-height:1.6;}
+.gold{color:#fbbf24;}
+.red-text{color:#f87171;}
+
+/* Cards */
+.card{background:#0f172a;border:1px solid #1e3a5f;border-radius:16px;padding:20px;width:100%;}
+
+/* Inputs */
+input[type=text]{background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;color:#e2e8f0;padding:11px 14px;font-size:15px;width:100%;outline:none;transition:border-color .2s;}
+input[type=text]::placeholder{color:#334155;}
+input[type=text]:focus{border-color:#3b82f6;}
+.input-row{display:flex;align-items:center;gap:8px;width:100%;}
+.input-label{color:#fbbf24;font-size:14px;font-weight:600;min-width:28px;text-align:center;}
+
+/* Buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;width:100%;}
+.btn:active{transform:scale(0.96);}
+.btn-primary{background:#1d4ed8;color:#fff;}
+.btn-primary:hover{background:#2563eb;}
+.btn-gold{background:#b45309;color:#fde68a;border:1px solid #f59e0b;}
+.btn-gold:hover{background:#d97706;}
+.btn-ghost{background:transparent;color:#475569;border:1px solid #1e293b;font-size:13px;padding:9px 16px;}
+.btn-ghost:hover{color:#94a3b8;border-color:#334155;}
+.btn-sm{width:auto;padding:9px 18px;font-size:13px;}
+.btn-row{display:flex;gap:8px;width:100%;}
+.size-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.size-btn{background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;color:#94a3b8;padding:9px 20px;font-size:14px;cursor:pointer;transition:all .15s;}
+.size-btn:hover,.size-btn.sel{background:#1e3a8a;border-color:#3b82f6;color:#93c5fd;}
+
+/* Timer arc */
+.timer-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
+.timer-wrap svg{transform:rotate(-90deg);}
+.timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:24px;font-weight:700;}
+
+/* Village */
+.village{display:flex;gap:5px;align-items:flex-end;justify-content:center;flex-wrap:wrap;width:100%;padding:8px 0;}
+.house-wrap{display:flex;flex-direction:column;align-items:center;transition:transform .2s;}
+
+/* Generator button */
+#gen-btn{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#1e3a5f,#0a1628);border:3px solid #1d4ed8;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-user-select:none;transition:transform .08s,box-shadow .1s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#gen-btn:hover{box-shadow:0 0 20px rgba(59,130,246,0.4);}
+#gen-btn.pressed{transform:scale(0.91);}
+#gen-btn .gear{font-size:38px;transition:transform .1s;}
+#gen-btn .gear.spin{animation:spin-gear 0.4s linear infinite;}
+#gen-btn .btn-label{color:#93c5fd;font-size:12px;font-weight:700;letter-spacing:1px;}
+@keyframes spin-gear{to{transform:rotate(360deg)}}
+
+/* Progress */
+.prog-bar{width:100%;background:#0f172a;border-radius:10px;height:12px;overflow:hidden;border:1px solid #1e293b;}
+.prog-fill{height:100%;border-radius:10px;background:#2563eb;transition:width .2s,background .3s;}
+.prog-label{font-size:11px;color:#475569;text-align:center;}
+
+/* Stats */
+.stats-row{display:flex;gap:10px;width:100%;justify-content:center;}
+.stat-box{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:10px 16px;text-align:center;flex:1;}
+.stat-val{font-size:22px;font-weight:700;color:#fbbf24;}
+.stat-lbl{font-size:11px;color:#475569;}
+
+/* Countdown */
+#cd-num{font-size:96px;font-weight:800;color:#fbbf24;animation:pop .35s ease-out;}
+@keyframes pop{0%{transform:scale(2);opacity:0}60%{transform:scale(0.9)}100%{transform:scale(1);opacity:1}}
+
+/* Result */
+.tier-emoji{font-size:52px;text-align:center;}
+.leaderboard{width:100%;display:flex;flex-direction:column;gap:6px;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:#0f172a;border:1px solid #1e293b;}
+.lb-row.rank1{background:#1c1400;border-color:#f59e0b;}
+.lb-rank{font-size:18px;width:26px;text-align:center;}
+.lb-name{flex:1;color:#e2e8f0;font-size:14px;}
+.lb-score{color:#fbbf24;font-size:14px;font-weight:700;}
+.lb-tier{font-size:13px;color:#64748b;}
+
+/* Flash overlay */
+#flash{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;background:rgba(251,191,36,0.12);opacity:0;border-radius:0;}
+#flash.go{animation:flash-anim .4s ease-out;}
+@keyframes flash-anim{0%{opacity:1}100%{opacity:0}}
+
+/* Shake */
+.shake-me{animation:shk .18s ease-out;}
+@keyframes shk{0%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}100%{transform:translateX(0)}}
+
+/* Bolt particle */
+.bolt{position:fixed;pointer-events:none;z-index:40;font-size:20px;animation:bolt-fly .7s ease-out forwards;}
+@keyframes bolt-fly{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(0.4)}}
+
+/* Ready screen */
+.ready-name{font-size:26px;font-weight:700;color:#fbbf24;}
+.prev-score{font-size:14px;color:#64748b;text-align:center;}
+
+/* Power line animation */
+.power-line{stroke-dasharray:200;stroke-dashoffset:200;animation:draw-line .5s ease-out forwards;}
+@keyframes draw-line{to{stroke-dashoffset:0}}
+
+/* Glow on lit house */
+.house-lit{filter:drop-shadow(0 0 6px #fde047);}
+
+/* Mobile */
+@media(max-width:400px){
+  #gen-btn{width:130px;height:130px;}
+  #gen-btn .gear{font-size:30px;}
+  .title{font-size:22px;}
+}
+</style>
+</head>
+<body>
+<canvas id="star-canvas"></canvas>
+<div id="flash"></div>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="scr-home">
+    <div style="font-size:52px;text-align:center;">⚡</div>
+    <div class="title">Power the Village</div>
+    <p class="subtitle">Click the generator as fast as you can!<br>10 seconds to light up the whole village.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="showSingle()">👤 Single Player</button>
+      <button class="btn btn-gold" onclick="showMulti()">👥 Multiplayer</button>
+    </div>
+    <p class="subtitle" style="font-size:12px;">Best: 56+ clicks = Energy Champion 🏆</p>
+  </div>
+
+  <!-- SINGLE PLAYER SETUP -->
+  <div class="screen" id="scr-single">
+    <div class="title">Single Player</div>
+    <div class="card" style="gap:12px;display:flex;flex-direction:column;">
+      <p class="subtitle" style="text-align:left;color:#94a3b8;">Enter your name to begin:</p>
+      <input type="text" id="sp-name" placeholder="Your name..." maxlength="20"/>
+      <button class="btn btn-gold" onclick="startSingle()">⚡ Start Game</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
+  </div>
+
+  <!-- MULTIPLAYER SETUP -->
+  <div class="screen" id="scr-multi">
+    <div class="title">Multiplayer</div>
+    <div class="card" style="gap:14px;display:flex;flex-direction:column;">
+      <p class="subtitle" style="text-align:left;color:#94a3b8;">How many players?</p>
+      <div class="size-row">
+        <button class="size-btn" id="sz2" onclick="setSize(2)">2 Players</button>
+        <button class="size-btn" id="sz3" onclick="setSize(3)">3 Players</button>
+        <button class="size-btn" id="sz4" onclick="setSize(4)">4 Players</button>
+      </div>
+      <div id="player-inputs" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button class="btn btn-gold" id="multi-go" onclick="startMulti()" style="display:none;">🏆 Start Tournament</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="screen" id="scr-cd">
+    <div id="cd-num">3</div>
+    <p class="subtitle">Get ready to click!</p>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="scr-game">
+    <div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
+      <div>
+        <div style="font-size:12px;color:#475569;" id="turn-label">Player</div>
+        <div style="font-size:16px;font-weight:700;color:#fbbf24;" id="turn-name"></div>
+      </div>
+      <div class="timer-wrap">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="33" fill="none" stroke="#1e293b" stroke-width="7"/>
+          <circle id="timer-arc" cx="40" cy="40" r="33" fill="none" stroke="#3b82f6"
+            stroke-width="7" stroke-dasharray="207.3" stroke-dashoffset="0"
+            stroke-linecap="round"/>
+        </svg>
+        <div class="timer-num" id="timer-num">10</div>
+      </div>
+      <div class="stat-box" style="flex:none;min-width:70px;">
+        <div class="stat-val" id="click-count">0</div>
+        <div class="stat-lbl">clicks</div>
+      </div>
+    </div>
+
+    <div class="village" id="village"></div>
+
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <p class="prog-label" id="prog-label">Village power: 0%</p>
+
+    <button id="gen-btn" onclick="handleClick(event)" ontouchstart="handleClick(event)">
+      <span class="gear" id="gear-icon">⚙️</span>
+      <span class="btn-label">CLICK!</span>
+    </button>
+
+    <p class="subtitle" style="font-size:12px;" id="first-click-hint">First click starts the 10-second timer!</p>
+  </div>
+
+  <!-- READY HANDOFF -->
+  <div class="screen" id="scr-ready">
+    <div style="font-size:48px;">🏘️</div>
+    <div class="ready-name" id="ready-name"></div>
+    <p class="subtitle">it's your turn!</p>
+    <div class="card" style="text-align:center;">
+      <p class="prev-score" id="prev-score-txt"></p>
+    </div>
+    <button class="btn btn-gold" onclick="doCountdown(beginTurn)">✅ I'm Ready — GO!</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="scr-result">
+    <div class="tier-emoji" id="res-emoji"></div>
+    <div class="title" id="res-title"></div>
+    <p class="subtitle" id="res-sub"></p>
+    <div class="leaderboard" id="leaderboard"></div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="playAgain()">⚡ Play Again</button>
+      <button class="btn btn-ghost" onclick="goHome()">🏠 Menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─── State ─── */
+let mode='single', players=[], scores=[], curIdx=0;
+let clicks=0, timeLeft=10, gameActive=false, timerIv=null;
+let multiSize=2, audioCtx=null;
+
+/* ─── Stars ─── */
+(function initStars(){
+  const c=document.getElementById('star-canvas');
+  function resize(){
+    c.width=window.innerWidth; c.height=window.innerHeight;
+    const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
+    for(let i=0;i<120;i++){
+      const x=Math.random()*c.width, y=Math.random()*c.height*0.6;
+      const r=Math.random()*1.4+0.2;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.7+0.1})`; ctx.fill();
+    }
+  }
+  resize(); window.addEventListener('resize',resize);
+  /* twinkle */
+  const stars2=[];
+  const c2=document.createElement('canvas');
+  c2.style.cssText='position:fixed;top:0;left:0;pointer-events:none;z-index:0;';
+  document.body.appendChild(c2);
+  function resizeC2(){c2.width=window.innerWidth;c2.height=window.innerHeight;}
+  resizeC2(); window.addEventListener('resize',resizeC2);
+  for(let i=0;i<30;i++) stars2.push({x:Math.random(),y:Math.random()*0.5,phase:Math.random()*Math.PI*2,speed:Math.random()*0.02+0.01,r:Math.random()*1.2+0.3});
+  (function twinkle(){
+    const ctx2=c2.getContext('2d'); ctx2.clearRect(0,0,c2.width,c2.height);
+    stars2.forEach(s=>{
+      s.phase+=s.speed;
+      const a=0.3+0.5*Math.abs(Math.sin(s.phase));
+      ctx2.beginPath(); ctx2.arc(s.x*c2.width,s.y*c2.height,s.r,0,Math.PI*2);
+      ctx2.fillStyle=`rgba(255,230,100,${a})`; ctx2.fill();
+    });
+    requestAnimationFrame(twinkle);
+  })();
+})();
+
+/* ─── Audio ─── */
+function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx;}
+function playClick(n){
+  try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.setValueAtTime(180+n*4,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(380+n*2,ac.currentTime+0.06);
+    g.gain.setValueAtTime(0.18,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.1);
+    o.start();o.stop(ac.currentTime+0.12);}catch(e){}
+}
+function playMilestone(){
+  try{const ac=getAC();
+    [330,415,494,622].forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=f;
+      g.gain.setValueAtTime(0.13,ac.currentTime+i*0.09);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+i*0.09+0.18);
+      o.start(ac.currentTime+i*0.09);o.stop(ac.currentTime+i*0.09+0.2);
+    });}catch(e){}
+}
+function playEnd(s){
+  try{const ac=getAC();
+    const freqs=s>=56?[523,659,784,1047,1319]:s>=41?[523,659,784,1047]:s>=26?[440,554,659]:s>=11?[330,415]:[220,196];
+    freqs.forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=f;
+      g.gain.setValueAtTime(0.15,ac.currentTime+i*0.13);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+i*0.13+0.35);
+      o.start(ac.currentTime+i*0.13);o.stop(ac.currentTime+i*0.13+0.4);
+    });}catch(e){}
+}
+function playCountBeep(n){
+  try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+    o.frequency.value=n===0?880:440;
+    g.gain.setValueAtTime(0.2,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.15);
+    o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+0.18);}catch(e){}
+}
+
+/* ─── Screen nav ─── */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goHome(){clearInterval(timerIv);gameActive=false;showScreen('scr-home');}
+
+/* ─── Single player ─── */
+function showSingle(){showScreen('scr-single');setTimeout(()=>document.getElementById('sp-name').focus(),150);}
+function startSingle(){
+  const n=(document.getElementById('sp-name').value.trim())||'Player';
+  mode='single';players=[n];scores=[];curIdx=0;
+  doCountdown(beginTurn);
+}
+
+/* ─── Multiplayer ─── */
+function showMulti(){showScreen('scr-multi');setSize(2);}
+function setSize(n){
+  multiSize=n;
+  [2,3,4].forEach(i=>document.getElementById('sz'+i).classList.toggle('sel',i===n));
+  const cont=document.getElementById('player-inputs');
+  cont.innerHTML='';
+  for(let i=0;i<n;i++){
+    const row=document.createElement('div');
+    row.className='input-row';
+    row.innerHTML=`<span class="input-label">${['🥇','🥈','🥉','4️⃣'][i]}</span><input type="text" id="mp${i}" placeholder="Player ${i+1} name..." maxlength="16"/>`;
+    cont.appendChild(row);
+  }
+  document.getElementById('multi-go').style.display='block';
+}
+function startMulti(){
+  const names=[];
+  for(let i=0;i<multiSize;i++){
+    const v=(document.getElementById('mp'+i).value.trim())||('Player '+(i+1));
+    names.push(v);
+  }
+  mode='multi';players=names;scores=[];curIdx=0;
+  doCountdown(beginTurn);
+}
+
+/* ─── Countdown ─── */
+function doCountdown(cb){
+  showScreen('scr-cd');
+  let n=3;
+  const el=document.getElementById('cd-num');
+  el.textContent=n; el.style.color='#fbbf24'; playCountBeep(n);
+  const iv=setInterval(()=>{
+    n--;
+    if(n===0){el.textContent='GO!';el.style.color='#4ade80';playCountBeep(0);}
+    else if(n<0){clearInterval(iv);cb();}
+    else{el.textContent=n;el.style.color='#fbbf24';playCountBeep(n);}
+  },800);
+}
+
+/* ─── Build village (SVG houses) ─── */
+function buildVillage(){
+  const v=document.getElementById('village');
+  v.innerHTML='';
+  for(let i=0;i<10;i++){
+    const w=document.createElement('div');
+    w.className='house-wrap'; w.id='hw'+i;
+    w.innerHTML=`<svg id="house${i}" width="44" height="50" viewBox="0 0 44 50">
+      <polygon id="roof${i}" points="2,20 22,2 42,20" fill="#374151" stroke="#1f2937" stroke-width="1"/>
+      <rect id="wall${i}" x="6" y="20" width="32" height="28" rx="2" fill="#1f2937"/>
+      <rect id="win${i}a" x="9" y="25" width="10" height="10" rx="2" fill="#111827"/>
+      <rect id="win${i}b" x="25" y="25" width="10" height="10" rx="2" fill="#111827"/>
+      <rect id="door${i}" x="16" y="34" width="12" height="14" rx="2" fill="#111827"/>
+      <circle id="lamp${i}" cx="22" cy="4" r="2.5" fill="#1f2937" opacity="0.3"/>
+    </svg>`;
+    v.appendChild(w);
+  }
+}
+
+function lightHouse(i){
+  if(i>=10) return;
+  const hw=document.getElementById('hw'+i);
+  if(!hw||hw.dataset.lit==='1') return;
+  hw.dataset.lit='1';
+  document.getElementById('roof'+i).setAttribute('fill','#c2410c');
+  document.getElementById('wall'+i).setAttribute('fill','#92400e');
+  document.getElementById('win'+i+'a').setAttribute('fill','#fde047');
+  document.getElementById('win'+i+'b').setAttribute('fill','#fde047');
+  document.getElementById('door'+i).setAttribute('fill','#78350f');
+  document.getElementById('lamp'+i).setAttribute('fill','#fde047');
+  document.getElementById('lamp'+i).setAttribute('opacity','1');
+  hw.classList.add('house-lit');
+  hw.style.animation='none';
+  void hw.offsetWidth;
+  hw.style.animation='';
+  /* bounce */
+  hw.style.transform='scale(1.2)';
+  setTimeout(()=>hw.style.transform='',200);
+}
+
+/* ─── Begin turn ─── */
+function beginTurn(){
+  clicks=0; timeLeft=10; gameActive=false;
+  clearInterval(timerIv);
+  buildVillage();
+  document.getElementById('click-count').textContent='0';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('prog-fill').style.background='#2563eb';
+  document.getElementById('prog-label').textContent='Village power: 0%';
+  document.getElementById('timer-num').textContent='10';
+  document.getElementById('timer-arc').style.strokeDashoffset='0';
+  document.getElementById('timer-arc').style.stroke='#3b82f6';
+  document.getElementById('turn-name').textContent=players[curIdx];
+  document.getElementById('turn-label').textContent=mode==='multi'?`Round ${curIdx+1}/${players.length}`:'Your turn';
+  document.getElementById('gear-icon').classList.remove('spin');
+  document.getElementById('first-click-hint').style.display='block';
+  showScreen('scr-game');
+}
+
+/* ─── Click handler ─── */
+function handleClick(e){
+  e.preventDefault();
+  if(!gameActive){startTimer();}
+  if(!gameActive) return;
+  spawnBolt(e);
+  playClick(clicks);
+  clicks++;
+  document.getElementById('click-count').textContent=clicks;
+  if(clicks<=10) lightHouse(clicks-1);
+  const pct=Math.min(Math.round((clicks/50)*100),100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  if(pct>=100) document.getElementById('prog-fill').style.background='#16a34a';
+  else if(pct>=60) document.getElementById('prog-fill').style.background='#ca8a04';
+  document.getElementById('prog-label').textContent='Village power: '+pct+'%';
+  /* gear pulse */
+  const gear=document.getElementById('gear-icon');
+  gear.style.transform='rotate(30deg) scale(1.2)';
+  setTimeout(()=>gear.style.transform='',80);
+  /* gen btn pulse */
+  const btn=document.getElementById('gen-btn');
+  btn.classList.add('pressed');
+  setTimeout(()=>btn.classList.remove('pressed'),80);
+  if(clicks%10===0) doMilestone();
+}
+
+function startTimer(){
+  gameActive=true;
+  document.getElementById('gear-icon').classList.add('spin');
+  document.getElementById('first-click-hint').style.display='none';
+  const arc=document.getElementById('timer-arc');
+  const full=207.3;
+  timerIv=setInterval(()=>{
+    timeLeft--;
+    const el=document.getElementById('timer-num');
+    el.textContent=timeLeft;
+    arc.style.strokeDashoffset=full*(1-(timeLeft/10));
+    if(timeLeft<=3){arc.style.stroke='#ef4444'; el.style.color='#f87171';}
+    else if(timeLeft<=5){arc.style.stroke='#f59e0b';}
+    if(timeLeft<=0){clearInterval(timerIv);endTurn();}
+  },1000);
+}
+
+/* ─── Milestone ─── */
+function doMilestone(){
+  playMilestone();
+  const f=document.getElementById('flash');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+  document.getElementById('app').classList.remove('shake-me');
+  void document.getElementById('app').offsetWidth;
+  document.getElementById('app').classList.add('shake-me');
+  setTimeout(()=>document.getElementById('app').classList.remove('shake-me'),200);
+}
+
+/* ─── Bolt particles ─── */
+function spawnBolt(e){
+  const symbols=['⚡','💡','✨','🔥'];
+  const b=document.createElement('div');
+  b.className='bolt';
+  b.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+  let x,y;
+  if(e.touches&&e.touches[0]){x=e.touches[0].clientX;y=e.touches[0].clientY;}
+  else{x=e.clientX||window.innerWidth/2;y=e.clientY||window.innerHeight*0.7;}
+  b.style.left=(x-12)+'px'; b.style.top=(y-12)+'px';
+  b.style.marginLeft=(Math.random()*30-15)+'px';
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),750);
+}
+
+/* ─── End turn ─── */
+function endTurn(){
+  gameActive=false;
+  document.getElementById('gear-icon').classList.remove('spin');
+  document.getElementById('timer-num').style.color='#fff';
+  scores.push({name:players[curIdx],score:clicks});
+  playEnd(clicks);
+  if(mode==='multi'&&curIdx<players.length-1){
+    curIdx++;
+    const prev=scores[scores.length-1];
+    const prevTier=getTier(prev.score);
+    document.getElementById('ready-name').textContent=players[curIdx];
+    document.getElementById('prev-score-txt').textContent=
+      `${prev.name} powered ${Math.min(prev.score,10)} house${prev.score!==1?'s':''} — ${prev.score} clicks! ${prevTier.emoji}`;
+    showScreen('scr-ready');
+  } else {
+    showResult();
+  }
+}
+
+/* ─── Tier ─── */
+function getTier(s){
+  if(s<=10) return {emoji:'🌑',title:'Village in Darkness',sub:'Not a single light... try clicking faster!',color:'#ef4444'};
+  if(s<=25) return {emoji:'🕯️',title:'Partial Power',sub:'A few homes have dim light. Practice more!',color:'#f59e0b'};
+  if(s<=40) return {emoji:'💡',title:'Most Homes Lit!',sub:'Great effort — almost full power!',color:'#eab308'};
+  if(s<=55) return {emoji:'🏘️⚡',title:'Village Fully Powered!',sub:'Amazing! Every home is glowing!',color:'#22c55e'};
+  return {emoji:'🏆🔥',title:'Energy Champion!',sub:'Legendary! You are unstoppable!',color:'#a855f7'};
+}
+
+/* ─── Show result ─── */
+function showResult(){
+  const lb=document.getElementById('leaderboard');
+  lb.innerHTML='';
+  if(mode==='single'){
+    const t=getTier(scores[0].score);
+    document.getElementById('res-emoji').textContent=t.emoji;
+    document.getElementById('res-title').textContent=t.title;
+    document.getElementById('res-sub').textContent=
+      `${scores[0].name} — ${scores[0].score} clicks in 10 seconds! ${t.sub}`;
+  } else {
+    const sorted=[...scores].sort((a,b)=>b.score-a.score);
+    const t=getTier(sorted[0].score);
+    document.getElementById('res-emoji').textContent=t.emoji;
+    document.getElementById('res-title').textContent=`${sorted[0].name} wins!`;
+    document.getElementById('res-sub').textContent=t.title+' — '+t.sub;
+    const medals=['🥇','🥈','🥉','4️⃣'];
+    sorted.forEach((p,i)=>{
+      const pt=getTier(p.score);
+      const row=document.createElement('div');
+      row.className='lb-row'+(i===0?' rank1':'');
+      row.innerHTML=`<span class="lb-rank">${medals[i]||i+1}</span>
+        <span class="lb-name">${p.name}</span>
+        <span class="lb-tier">${pt.emoji}</span>
+        <span class="lb-score">${p.score} clicks</span>`;
+      lb.appendChild(row);
+    });
+  }
+  showScreen('scr-result');
+}
+
+/* ─── Play again ─── */
+function playAgain(){
+  curIdx=0; scores=[];
+  doCountdown(beginTurn);
+}
+</script>
+</body>
+</html>
